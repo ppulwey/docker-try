@@ -1,13 +1,42 @@
+// server.js
 const express = require("express");
-
-const PORT = 8281;
-const HOST = "0.0.0.0";
-
 const app = express();
+const connectDb = require("./src/connection");
+const PORT = 8080;
 
-app.get("/", (req, res) => {
-  res.send("Hello!");
+const User = require("./src/user.model");
+
+app.get("/users", async (req, res) => {
+  const users = await User.find();
+  res.json(users);
 });
 
-app.listen(PORT, HOST);
-console.log(`Running on http://${HOST}:${PORT}`);
+app.get("/user-create", async (req, res) => {
+  const user = new User({ username: "userTest" });
+  await user.save().then(() => console.log("User created"));
+  res.send("User created \n");
+});
+
+app.listen(PORT, function() {
+  console.log(`Listening on ${PORT}`);
+  const connectDbIntervalId = setInterval(async () => {
+    console.log(`ID is ${connectDbIntervalId}`);
+
+    console.log("Try to connect to db");
+
+    if (await connectToDb()) {
+      clearInterval(connectDbIntervalId);
+    }
+  }, 5000);
+});
+
+async function connectToDb() {
+  try {
+    await connectDb();
+    console.log("MongoDb connected");
+    return true;
+  } catch (error) {
+    console.log("MongoDb connection error");
+    return false;
+  }
+}
